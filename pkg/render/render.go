@@ -1,76 +1,96 @@
 package render
 
 import (
-	"fmt"
+	"bytes"
 	"html/template"
 	"log"
 	"net/http"
+	"path/filepath"
 )
 
-func RenderTemplateTest(w http.ResponseWriter, tmpl string){
-	// kita parse salah satu template
-	parsedTemplate, _ := template.ParseFiles("./templates/" + tmpl, "./templates/base.layout.tmpl")
-
-	err := parsedTemplate.Execute(w, nil)
-	if err !=nil {
-		fmt.Println("error parsing template:", err)
-	}
-}
-
-// the key will look things yang merupakan string dan dengan apa yang di store di dalamnya merupakan apa yang di return template.ParseFiles (kalau kita hover dia mereturn template.Template)
-var tc = make(map[string]*template.Template)
-
-func RenderTemplate(w http.ResponseWriter, t string){
-	// we need to store parsed template in variable
-	// instead of reading from the disk every single time, we'll have some kind of data structure we can store a parsed template into, selanjutnya we'll check to see if the template exists in that data structure. If it does, we'll use it, and if it doesnt, we'll read it from disk, parse it and then store the resulting template in that data structure.
-	// the best data structure to use is map
-	var tmpl *template.Template
-	var err error
-
-	// check if we already have the template in our cache
-	// kita lihat di map tc, adakah key t
-	// _ merupakan apa isinya, inMap merupakan apakah dia true
-	_, inMap := tc[t]
-	if !inMap{
-		// need to create the template
-		log.Println("creating template and adding to cache")
-		err = createTemplateCache(t)
-		if err != nil {
-			log.Println(err)
-		}
-
-	} else {
-		// we have the template in the cache
-		log.Println(("using cached template"))
+func RenderTemplate(w http.ResponseWriter, tmpl string){
+	// 1. create a template cache
+	tc, err := createTemplateCache()
+	// jika ada error maka kita panggil Fatal
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	// kita ambil templatenya
-	tmpl = tc[t]
+	// jika lewat error checking maka kita akan punya template cache dan lanjut ke langkah 2
+	// 2. get requested template from cache
+	// t merupakan index, ok adalah booelan true or false. dia mengecek apakah ada t di dalam tmpl (yang merupakan argument function RenderTemplate)
+	// t ini antara si about atau home
+	t, ok := tc[tmpl]
+	if !ok {
+		log.Fatal(err)
+	}
 
-	// lalu kita execute
-	err = tmpl.Execute(w, nil)
+	// langkah selanjutnya adalah optional, yaitu membuat buff
+	// create buffer dengan menggunakan bytes.Buffer
+	// disini what we are going to do is try to execute the value that we got from the map. Namun, rather than doing it directly (we can do it if we want), we are going to execute buffer directly and then write it out. And the only reason we are doing this is for finer grained error checking, karena ketika kita create this buffer, kita bisa ignore the result. 
+	buf := new(bytes.Buffer)
+
+	// kita bisa execute buff dan nil. Ini memberi clear indication that the value we got from that map, there is something wrong with it. It parsed it, but we cant execute it and we dont know what situation that might be.
+	err = t.Execute(buf, nil)
 	if err != nil {
 		log.Println(err)
 	}
+
+	// 3. render the template
+	_, err = buf.WriteTo(w)
+	if err != nil {
+		log.Println(err)
+	}
+
 }
 
-// kita buat sama seperti function ini:
-// 	parsedTemplate, _ := template.ParseFiles("./templates/" + tmpl, "./templates/base.layout.tmpl")
-func createTemplateCache(t string) error{
-	// kita create templates dengan value of a slice of string. In that slice, we'll put one entry for each of the things required to render a template to the web browser
-	templates := []string{
-		fmt.Sprintf("./templates/%s", t),
-		// kita define juga layout
-		"./templates/base.layout.tmpl",
-	}
+func createTemplateCache() (map[string]*template.Template, error){
+	// myCache := make(map[string]*template.Template)
+	// atau bisa juga ditulis:
+	myCache := map[string]*template.Template{}
 
-	// ... => sama seperti spread
-	tmpl, err := template.ParseFiles(templates...)
+  // we want to make our cache, but we want to create entire cache at once and populate it with every available templates
+	// when you are rendering a template that uses layout, you typically must have as the first thing you try to parse, the template you want to render and then the associated layout and partials and so forth.
+	// artinya, when we start parsing our templates and adding them to myCache, we want to do everything that ends in .page.tmpl first
+	pages, err := filepath.Glob("./templates/*.page.tmpl")
 	if err != nil {
-		return err
+		return myCache, err
 	}
 
-	// add template to cache (map)
-	tc[t] = tmpl
-	return nil
+	// if we get past the error checking it means we now have a slice of string with all the files that end in .page.tmpl from the templates folder 
+	// selanjutnya kita range through all the files ending with *.page.tmpl
+	// setiap iterasi, page akan berisi value whatever we get from the slice of strings
+	for _, page := range pages {
+		// page akan mengambil bagian belakang dari nama file
+		// Base berfungsi untuk mereturn last element of the path
+		name := filepath.Base(page)
+
+		// kita parse file dengan nama 'page' dan store that in a template called 'name', lalu kita masukkan ke variable ts
+		ts, err := template.New(name).ParseFiles(page)
+		if err != nil {
+			return myCache, err
+		}
+
+		// lalu kita loop through layout that exist in that directory
+		matches, err := filepath.Glob("./templates/*.layout.tmpl")
+		if err != nil {
+			return myCache, err
+		}
+
+		// ParseGlob parses the template definitions in the files identified by the pattern and associates the resulting templates with t
+		// all this is doing is dia menerangkan bahwa some of the file di line:
+		//  ts, err := template.New(name).ParseFiles(page)
+		//...might require the file layout down here
+		if len(matches) > 0 {
+			ts, err = ts.ParseGlob("./templates/*.layout.tmpl")
+			if err != nil {
+				return myCache, err
+			}
+		}
+
+		// setelah semua selesai maka kita simpan myCache dengan key name ke dalam ts (template set)
+		myCache[name] = ts
+	}
+
+	return myCache, nil
 }
