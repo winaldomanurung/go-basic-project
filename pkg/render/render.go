@@ -9,8 +9,13 @@ import (
 )
 
 func RenderTemplate(w http.ResponseWriter, tmpl string){
+	// get the template cache from the app config
+	// how?
+
+	// =================================================
+
 	// 1. create a template cache
-	tc, err := createTemplateCache()
+	tc, err := CreateTemplateCache()
 	// jika ada error maka kita panggil Fatal
 	if err != nil {
 		log.Fatal(err)
@@ -44,7 +49,7 @@ func RenderTemplate(w http.ResponseWriter, tmpl string){
 
 }
 
-func createTemplateCache() (map[string]*template.Template, error){
+func CreateTemplateCache() (map[string]*template.Template, error){
 	// myCache := make(map[string]*template.Template)
 	// atau bisa juga ditulis:
 	myCache := map[string]*template.Template{}
