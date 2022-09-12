@@ -6,28 +6,34 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
 )
 
-func RenderTemplate(w http.ResponseWriter, tmpl string){
-	// get the template cache from the app config
-	// how?
+var app *config.AppConfig
 
+// NewTemplates set the config for the template package
+func NewTemplates(a *config.AppConfig) {
+	app = a
+}
+
+func RenderTemplate(w http.ResponseWriter, tmpl string){
+	var tc map[string]*template.Template
+	if app.UseCache{
+		// get the template cache from the app config
+		// how?
+		tc = app.TemplateCache
+	} else {
+		tc, _ = CreateTemplateCache()
+	}
 	// =================================================
 
-	// 1. create a template cache
-	tc, err := CreateTemplateCache()
-	// jika ada error maka kita panggil Fatal
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// jika lewat error checking maka kita akan punya template cache dan lanjut ke langkah 2
 	// 2. get requested template from cache
 	// t merupakan index, ok adalah booelan true or false. dia mengecek apakah ada t di dalam tmpl (yang merupakan argument function RenderTemplate)
 	// t ini antara si about atau home
 	t, ok := tc[tmpl]
 	if !ok {
-		log.Fatal(err)
+		log.Fatal("Could not get template from template cache")
 	}
 
 	// langkah selanjutnya adalah optional, yaitu membuat buff
@@ -36,13 +42,11 @@ func RenderTemplate(w http.ResponseWriter, tmpl string){
 	buf := new(bytes.Buffer)
 
 	// kita bisa execute buff dan nil. Ini memberi clear indication that the value we got from that map, there is something wrong with it. It parsed it, but we cant execute it and we dont know what situation that might be.
-	err = t.Execute(buf, nil)
-	if err != nil {
-		log.Println(err)
-	}
+	_ = t.Execute(buf, nil)
+
 
 	// 3. render the template
-	_, err = buf.WriteTo(w)
+	_, err := buf.WriteTo(w)
 	if err != nil {
 		log.Println(err)
 	}
