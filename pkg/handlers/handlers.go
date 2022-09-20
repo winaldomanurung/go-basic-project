@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
+	"github.com/winaldomanurung/go-basic-web-app/pkg/models"
 	"github.com/winaldomanurung/go-basic-web-app/pkg/render"
 )
 
@@ -29,11 +30,15 @@ func NewHandlers(r *Repository){
 	Repo = r
 }
 
-func (m *Repository)Home(w http.ResponseWriter, r *http.Request){
-	render.RenderTemplate(w, "home.page.tmpl")
+func (m *Repository) Home(w http.ResponseWriter, r *http.Request){
+	render.RenderTemplate(w, "home.page.tmpl", &models.TemplateData{})
 }
 
-func (m *Repository)About(w http.ResponseWriter, r *http.Request){
-	render.RenderTemplate(w, "about.page.tmpl")
+func (m *Repository) About(w http.ResponseWriter, r *http.Request){
+	stringMap := make(map[string]string)
+	stringMap["test"] = "Hello, again"
+	render.RenderTemplate(w, "about.page.tmpl", &models.TemplateData{
+		StringMap: stringMap,
+	})
 }
 

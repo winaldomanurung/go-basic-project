@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
+	"github.com/winaldomanurung/go-basic-web-app/pkg/models"
 )
 
 var app *config.AppConfig
@@ -17,7 +18,11 @@ func NewTemplates(a *config.AppConfig) {
 	app = a
 }
 
-func RenderTemplate(w http.ResponseWriter, tmpl string){
+func AddDefaultData(td *models.TemplateData) *models.TemplateData{
+	return td
+}
+
+func RenderTemplate(w http.ResponseWriter, tmpl string, td *models.TemplateData){
 	var tc map[string]*template.Template
 	if app.UseCache{
 		// get the template cache from the app config
@@ -41,8 +46,10 @@ func RenderTemplate(w http.ResponseWriter, tmpl string){
 	// disini what we are going to do is try to execute the value that we got from the map. Namun, rather than doing it directly (we can do it if we want), we are going to execute buffer directly and then write it out. And the only reason we are doing this is for finer grained error checking, karena ketika kita create this buffer, kita bisa ignore the result. 
 	buf := new(bytes.Buffer)
 
+	td = AddDefaultData(td)
+
 	// kita bisa execute buff dan nil. Ini memberi clear indication that the value we got from that map, there is something wrong with it. It parsed it, but we cant execute it and we dont know what situation that might be.
-	_ = t.Execute(buf, nil)
+	_ = t.Execute(buf, td)
 
 
 	// 3. render the template
