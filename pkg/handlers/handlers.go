@@ -30,6 +30,7 @@ func NewHandlers(r *Repository){
 	Repo = r
 }
 
+// kita bind Repository struct dengan function ini
 func (m *Repository) Home(w http.ResponseWriter, r *http.Request){
 	render.RenderTemplate(w, "home.page.tmpl", &models.TemplateData{})
 }

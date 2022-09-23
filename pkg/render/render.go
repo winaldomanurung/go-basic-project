@@ -2,6 +2,7 @@ package render
 
 import (
 	"bytes"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -72,6 +73,7 @@ func CreateTemplateCache() (map[string]*template.Template, error){
 	if err != nil {
 		return myCache, err
 	}
+	// pages: [templates\about.page.tmpl templates\home.page.tmpl]
 
 	// if we get past the error checking it means we now have a slice of string with all the files that end in .page.tmpl from the templates folder 
 	// selanjutnya kita range through all the files ending with *.page.tmpl
@@ -80,15 +82,23 @@ func CreateTemplateCache() (map[string]*template.Template, error){
 		// page akan mengambil bagian belakang dari nama file
 		// Base berfungsi untuk mereturn last element of the path
 		name := filepath.Base(page)
-
+		// name: about.page.tmpl
+		// name: home.page.tmpl
 		// kita parse file dengan nama 'page' dan store that in a template called 'name', lalu kita masukkan ke variable ts
 		ts, err := template.New(name).ParseFiles(page)
+		// ts: &{<nil> 0xc000066280 0xc00011a5a0 0xc000030180}
+		// ts: &{<nil> 0xc0000942c0 0xc00008a360 0xc00009a0c0}
+
 		if err != nil {
 			return myCache, err
 		}
 
 		// lalu kita loop through layout that exist in that directory
 		matches, err := filepath.Glob("./templates/*.layout.tmpl")
+		// matches: [templates\base.layout.tmpl]
+		// matches: [templates\base.layout.tmpl]
+		
+
 		if err != nil {
 			return myCache, err
 		}
@@ -106,6 +116,9 @@ func CreateTemplateCache() (map[string]*template.Template, error){
 
 		// setelah semua selesai maka kita simpan myCache dengan key name ke dalam ts (template set)
 		myCache[name] = ts
+		fmt.Println(myCache)
+		// myCache: map[about.page.tmpl:0xc00007b3e0]
+		// myCache: map[about.page.tmpl:0xc00007b3e0 home.page.tmpl:0xc00007bce0]
 	}
 
 	return myCache, nil
