@@ -4,19 +4,33 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
 	"github.com/winaldomanurung/go-basic-web-app/pkg/handlers"
 	"github.com/winaldomanurung/go-basic-web-app/pkg/render"
 )
 
+var app config.AppConfig
 // Jika mau deploy harus hapus 127.0.0.1
 const portNumber = "127.0.0.1:8080"
+var session *scs.SessionManager
 
 func main() {
 	// app merupakan variable berisi UseCache dan TemplateCache
-	var app config.AppConfig
 
+	app.InProduction = false
+
+
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+	// untuk ketika browser di close
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = app.InProduction //di set true di production
+
+	app.Session = session
 	// CreateTemplateCache mereturn map berisi referan Template struct dan error (kalau ada)
 	tc, err := render.CreateTemplateCache()
 
