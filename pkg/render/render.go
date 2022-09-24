@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
-	"github.com/winaldomanurung/go-basic-web-app/pkg/models"
+	"github.com/winaldomanurung/go-basic-project/pkg/config"
+	"github.com/winaldomanurung/go-basic-project/pkg/models"
 )
 
 var app *config.AppConfig

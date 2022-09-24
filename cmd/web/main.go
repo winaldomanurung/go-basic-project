@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/alexedwards/scs/v2"
-	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
-	"github.com/winaldomanurung/go-basic-web-app/pkg/handlers"
-	"github.com/winaldomanurung/go-basic-web-app/pkg/render"
+	"github.com/winaldomanurung/go-basic-project/pkg/config"
+	"github.com/winaldomanurung/go-basic-project/pkg/handlers"
+	"github.com/winaldomanurung/go-basic-project/pkg/render"
 )
 
 var app config.AppConfig

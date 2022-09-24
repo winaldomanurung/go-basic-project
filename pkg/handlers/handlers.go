@@ -3,9 +3,9 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/winaldomanurung/go-basic-web-app/pkg/config"
-	"github.com/winaldomanurung/go-basic-web-app/pkg/models"
-	"github.com/winaldomanurung/go-basic-web-app/pkg/render"
+	"github.com/winaldomanurung/go-basic-project/pkg/config"
+	"github.com/winaldomanurung/go-basic-project/pkg/models"
+	"github.com/winaldomanurung/go-basic-project/pkg/render"
 )
 
 // Repo is the repository used by the handlers
